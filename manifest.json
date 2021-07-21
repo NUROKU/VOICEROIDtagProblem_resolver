@@ -1,0 +1,12 @@
+{
+    "name": "動画タグ問題をちょっと解決したいやつ",
+    "version": "0.0.1",
+    "manifest_version": 2,
+    "description": "合成音声界隈の動画タグ問題を解決したい拡張機能",
+    "content_scripts": [{
+      "matches": ["https://www.nicovideo.jp/tag/*"],
+      "js": [
+        "content.js"
+      ]
+    }]
+  }
