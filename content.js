@@ -1,20 +1,8 @@
 
-
-function createURLfropArray(array){
-    ret = ""
-    for(let n = 0; n < array.length; n++){
-        ret += array[n]
-        if(n < array.length - 1){
-            ret += " OR "
-        }
-    }
-    return ret
-}
-
-
-
-const tagname_array = [
-    ["ソフトウェアトーク", "VOICEROID", "ボイスロイド", "CeVIO"],
+//動画の最初に言ってた対応表みたいなやつ
+//自由に列も中の単語も編集しちゃって大丈夫(ニコ動の仕様上OR検索は最大10件なんで行は最大10個かも)
+const TAGNAME_TABLE = [
+    ["ソフトウェアトーク", "VOICEROID", "ボイスロイド", "CeVIO","a.i.voice","VOICEVOX"],
     ["ソフトウェアトーク実況プレイ", "VOICEROID実況プレイ","CeVIO実況プレイ","a.i.voice実況プレイ"],
     ["ソフトウェアトーク劇場", "VOICEROID劇場","CeVIO劇場","A.I.VOICE劇場"],
     ["ソフトウェアトーク解説", "VOICEROID解説","CeVIO解説"],
@@ -26,21 +14,27 @@ const tagname_array = [
     []
 ]
 
-var fullpath = location.pathname
-var converted_tag = ""
+//URL取得してタグの部分だけ良い感じに抜き出す
+// "/tag/ソフトウェアトーク" みたいな感じに取得されるから、/tag/を空白に置換している
+var url_path = location.pathname
+var tag_name = decodeURI(url_path.replace("/tag/",""))
 
-//タグだけぬきだす、ついでに小文字化
-var tagname = decodeURI(fullpath.slice(5)).toLowerCase()
+//テーブルを上から1行ずつ舐め回す
+for(let n = 0; n < TAGNAME_TABLE.length; n++){
+    //行をいったん変数に格納
+    tagname_array = TAGNAME_TABLE[n]
 
+    //比較用に小文字化したものを変数に格納
+    comvarsion_tag = tag_name.toLowerCase()
+    comversion_array = tagname_array.map(v => v.toLowerCase())
 
-for(let n = 0; n < tagname_array.length; n++){
-    //検索するときは全部小文字として見る
-    tmp_array = tagname_array[n].map(v => v.toLowerCase())
-    
-    if (tmp_array.includes(tagname)) {
-        converted_tag = createURLfropArray(tagname_array[n])
+    //行の中にタグの単語が存在してた場合、{ }で囲まれた部分の処理をする
+    if (comversion_array.includes(comvarsion_tag)) {
+        //["VOICEROID","CeVIO"] → "VOICEROID OR CeVIO" みたいな変換する
+        var converted_tag = tagname_array.join(" OR ")
 
-        var url = "https://" + location.hostname + "/tag/" + encodeURI(converted_tag)
+        //良い感じにURL作って飛ばす、こわい
+        var url = "https://www.nicovideo.jp/tag/" + encodeURI(converted_tag)
         location.href = url
         break;
     }
