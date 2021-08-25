@@ -1,0 +1,23 @@
+{
+	"manifest_version" : 2,
+	"name"             : "動画タグ問題をちょっと解決したいやつ",
+	"version"          : "0.1.0",
+	"description"      : "合成音声界隈の動画タグ問題を解決したい拡張機能",
+	"author"           : "NUROKU",
+	"icons" : {
+		"32"  : "icon_32.png",
+		"48"  : "icon_48.png",
+		"128" : "icon_128.png"
+	},
+	"background": {
+		"scripts": [
+			"background.js"
+		],
+		"persistent": true
+	},
+	"permissions" : [
+		"*://www.nicovideo.jp/tag/*",
+		"webRequest",
+		"webRequestBlocking"
+	]
+}
