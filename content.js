@@ -1,4 +1,3 @@
-
 /* --- 前方一致で検知させる単語・ORで付け加える単語を定義(あらかじめ小文字で定義) --- */
 const TAG_WORD_INDEXOF_TABLE = [
     ["ソフトウェアトーク", "ボイチェビ", "ボイチェビトーク"],
@@ -10,16 +9,16 @@ const TAG_WORD_ADDWORD_TABLE = [
 ];
 
 
-/* カウンターとか */
+/* --- カウンターとかの事前定義 --- */
 let is_match = false; //前方一致するかどうか
 let table_col; //前方一致したときのテーブル列
 
-//URL取得してタグの部分だけ良い感じに抜き出す
+/* --- カURL取得してタグの部分だけ良い感じに抜き出す --- */
 // "/tag/ソフトウェアトーク" みたいな感じに取得されるから、/tag/を空白に置換している
 var url_path = location.pathname;
 var tag = decodeURI(url_path.replace("/tag/", ""));
 
-//ORの数を数える
+/* --- ORの数を数える --- */
 var ORcount = tag.match(/OR/g);
 
 /* --- 前方一致のテーブルを舐め回す --- */
@@ -32,8 +31,6 @@ for (var n = 0; n < TAG_WORD_INDEXOF_TABLE.length; n++) {
 
     //前方一致するものを探す
     var match_tagname = tagname_arr.find(el => tag.startsWith(el));
-    console.log(match_tagname);
-    console.log(tag)
 
     /* --- 前方一致したら --- */
     if (match_tagname) {
@@ -57,4 +54,3 @@ if (is_match && (!ORcount)) {
     var url = "https://www.nicovideo.jp/tag/" + encodeURI(url_path)
     location.href = url
 }
-

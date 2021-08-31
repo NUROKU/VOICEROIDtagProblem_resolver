@@ -36,8 +36,6 @@ browser.webRequest.onBeforeRequest.addListener(details => {
 
         //前方一致するものを探す
         var match_tagname = tagname_arr.find(el => tag.startsWith(el));
-        console.log(match_tagname);
-        console.log(tag)
 
         /* --- 前方一致したら --- */
         if (match_tagname) {
@@ -48,7 +46,7 @@ browser.webRequest.onBeforeRequest.addListener(details => {
         }
     }
 
-     //前方一致・ORが5個以下なら実行 
+     //前方一致・ORないなら
     if (is_match && (!ORcount)) {
         //undefinedが文字列として出力されないようにする
         if (genre == undefined) genre = "";
