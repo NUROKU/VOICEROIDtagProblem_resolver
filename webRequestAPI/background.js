@@ -11,12 +11,17 @@ let is_match = false; //前方一致するかどうか
 let try_counter = 0; //ORがいくつあるか）
 let url_path; //複数回動いてほしくないので事前定義
 
-
 /* --- リクエストが送信される前にリダイレクトをかける --- */
 browser.webRequest.onBeforeRequest.addListener(details => {
     /* タグ名を取得 */
     let url = new URL(details.url);
     let tag = decodeURI(url.pathname.split('/').filter(text => text.length > 0).pop());
+
+    //ORの数を数える
+    var ORcount = tag.match(/OR/g);
+    if(ORcount){
+        try_counter = ORcount.length;
+    }
 
     /* --- 前方一致のテーブルを舐め回す --- */
     for (var n = 0; n < TAG_WORD_INDEXOF_ARRAY.length; n++) {
@@ -29,19 +34,20 @@ browser.webRequest.onBeforeRequest.addListener(details => {
         }
     }
 
-    //undefinedが文字列として出力されないようにする
-    if (genre == undefined) genre = "";
-    //ORが無限に出ないようにする
-    if (genre.match(/OR/g)) genre = genre.substr(0, genre.indexOf("+OR"));
+        //undefinedが文字列として出力されないようにする
+        if (genre == undefined) genre = "";
+        //ORが無限に出ないようにする
+        if (genre.match(/OR/g)) genre = genre.substr(0, genre.indexOf("+OR"));
 
-    //ジャンルを追記しながらURLにする
-    url_path = TAG_WORD_ADDWORD_ARRAY.join(genre + '+OR+') + genre;
+        //ジャンルを追記しながらURLにする
+        url_path = TAG_WORD_ADDWORD_ARRAY.join(genre + '+OR+') + genre;
 
-    //前方一致していたら実行
-    if (is_match) {
+    //前方一致・ORが5個以下なら実行 
+    if (is_match && ORcount < 5) {
         url.pathname = '/tag/' + url_path;
         return {redirectUrl : url.href};
     }
+    is_match = false;
 
     return {};
 }, {
