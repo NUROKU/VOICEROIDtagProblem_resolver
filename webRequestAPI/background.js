@@ -19,7 +19,7 @@ browser.webRequest.onBeforeRequest.addListener(details => {
 
     //ORの数を数える
     var ORcount = tag.match(/OR/g);
-    if(ORcount){
+    if (ORcount) {
         try_counter = ORcount.length;
     }
 
@@ -34,22 +34,22 @@ browser.webRequest.onBeforeRequest.addListener(details => {
         }
     }
 
-        //undefinedが文字列として出力されないようにする
-        if (genre == undefined) genre = "";
-        //ORが無限に出ないようにする
-        if (genre.match(/OR/g)) genre = genre.substr(0, genre.indexOf("+OR"));
+    //undefinedが文字列として出力されないようにする
+    if (genre == undefined) genre = "";
+    //ORが無限に出ないようにする
+    if (genre.match(/OR/g)) genre = genre.substr(0, genre.indexOf("+OR"));
 
-        //ジャンルを追記しながらURLにする
-        url_path = TAG_WORD_ADDWORD_ARRAY.join(genre + '+OR+') + genre;
+    //ジャンルを追記しながらURLにする
+    url_path = TAG_WORD_ADDWORD_ARRAY.join(genre + '+OR+') + genre;
 
     //前方一致・ORが5個以下なら実行 
     if (is_match && ORcount < 5) {
         url.pathname = '/tag/' + url_path;
-        return {redirectUrl : url.href};
+        return { redirectUrl: url.href };
     }
     is_match = false;
 
     return {};
 }, {
-    urls : ['*://www.nicovideo.jp/tag/*']
+    urls: ['*://www.nicovideo.jp/tag/*']
 }, ['blocking']);
