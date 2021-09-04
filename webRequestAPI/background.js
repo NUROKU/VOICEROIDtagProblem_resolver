@@ -2,38 +2,67 @@
 /* --- ブラウザの違いを吸収 --- */
 if (typeof browser === 'undefined') browser = chrome;
 
-
-/* --- 検知して並べるタグたちを定義(あらかじめ小文字で定義) --- */
-const TAGNAME_TABLE = [
-    ["ソフトウェアトーク", "ボイチェビトーク", "voiceroid", "ボイスロイド", "cevio","a.i.voice","voicevox"],
-    ["ソフトウェアトーク実況プレイ", "ボイチェビトーク実況プレイ", "voiceroid実況プレイ","cevio実況プレイ","a.i.voice実況プレイ"],
-    ["ソフトウェアトーク劇場", "ボイチェビトーク劇場", "voiceroid劇場","cevio劇場","a.i.voice劇場"],
-    ["ソフトウェアトーク解説", "ボイチェビトーク解説", "voiceroid解説","cevio解説"],
-    ["ソフトウェアトークキッチン", "ボイチェビトークキッチン", "voiceroidキッチン","cevioキッチン"],
-    ["ソフトウェアトーク車載", "ボイチェビトーク車載", "voiceroid車載","cevio車載"],
-    ["ボイチェビトーク", "ソフトウェアトーク", "voiceroid", "ボイスロイド", "cevio","a.i.voice","voicevox"],
-    ["ボイチェビトーク実況プレイ", "ソフトウェアトーク実況プレイ", "voiceroid実況プレイ","cevio実況プレイ","a.i.voice実況プレイ"],
-    ["ボイチェビトーク劇場", "ソフトウェアトーク劇場", "voiceroid劇場","cevio劇場","a.i.voice劇場"],
-    ["ボイチェビトーク解説", "ソフトウェアトーク解説", "voiceroid解説","cevio解説"],
-    ["ボイチェビトークキッチン", "ソフトウェアトークキッチン", "voiceroidキッチン","cevioキッチン"],
-    ["ボイチェビトーク車載", "ソフトウェアトーク車載", "voiceroid車載","cevio車載"],
-    ["cevio_ai","cevio"]
+/* --- 前方一致で検知させる単語・ORで付け加える単語を定義(あらかじめ小文字で定義) --- */
+const TAG_WORD_INDEXOF_TABLE = [
+    ["ソフトウェアトーク", "ボイチェビ", "ボイチェビトーク"],
+    ["ソフトウェアシンガー", "vocaloid"]
+];
+const TAG_WORD_ADDWORD_TABLE = [
+    ["ソフトウェアトーク", "ボイチェビ", "ボイチェビトーク", "voiceroid", "ボイスロイド", "ボイロ", "cevio", "cevio_ai", "a.i.voice", "voicebox"],
+    ["ソフトウェアシンガー", "vocaloid", "ボカロ", "utau", "cevio", "synthv", "synthesizerv", "neutrino", "歌うボイスロイド"]
 ];
 
+/* カウンターとか */
+let is_match = false; //前方一致するかどうか
+let table_col; //前方一致したときのテーブル列
+let url_path; //複数回動いてほしくないので事前定義
 
 /* --- リクエストが送信される前にリダイレクトをかける --- */
 browser.webRequest.onBeforeRequest.addListener(details => {
     /* タグ名を取得 */
     let url = new URL(details.url);
     let tag = decodeURI(url.pathname.split('/').filter(text => text.length > 0).pop());
-    /* タグをテーブルから検索 */
-    let tag_names = TAGNAME_TABLE.filter(row => row.indexOf(tag.toLowerCase()) === 0);
-    if (tag_names.length === 1) {
-        /* タグリストが見つかれば */
-        url.pathname = '/tag/' + tag_names[0].join('+OR+');
-        return {redirectUrl : url.href};
+
+    //ORの数を数える
+    var ORcount = tag.match(/OR/g);
+
+    /* --- 前方一致のテーブルを舐め回す --- */
+    for (var n = 0; n < TAG_WORD_INDEXOF_TABLE.length; n++) {
+        //とりあえず配列を代入
+        var tagname_arr = TAG_WORD_INDEXOF_TABLE[n];
+
+        //タグを小文字化
+        tag = tag.toLowerCase();
+
+        //前方一致するものを探す
+        var match_tagname = tagname_arr.find(el => tag.startsWith(el));
+
+        /* --- 前方一致したら --- */
+        if (match_tagname) {
+            is_match = true;
+            /* --- 前方一致箇所を抜いた文字列を取得 ex:ソフトウェアトーク劇場 → 劇場 --- */
+            var genre = tag.replace(match_tagname, "");
+            table_col = n;
+        }
     }
+
+     //前方一致・ORないなら
+    if (is_match && (!ORcount)) {
+        //undefinedが文字列として出力されないようにする
+        if (genre == undefined) genre = "";
+        //ORが無限に出ないようにする
+        if (genre.match(/OR/g)) genre = genre.substr(0, genre.indexOf("+OR"));
+
+        //ジャンルを追記しながらURLにする
+        url_path = TAG_WORD_ADDWORD_TABLE[table_col].join(genre + '+OR+') + genre;
+
+        //リダイレクト
+        url.pathname = '/tag/' + url_path;
+        return { redirectUrl: url.href };
+    }
+    is_match = false;
+
     return {};
 }, {
-    urls : ['*://www.nicovideo.jp/tag/*']
+    urls: ['*://www.nicovideo.jp/tag/*']
 }, ['blocking']);

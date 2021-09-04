@@ -1,41 +1,56 @@
+/* --- 前方一致で検知させる単語・ORで付け加える単語を定義(あらかじめ小文字で定義) --- */
+const TAG_WORD_INDEXOF_TABLE = [
+    ["ソフトウェアトーク", "ボイチェビ", "ボイチェビトーク"],
+    ["ソフトウェアシンガー", "vocaloid"]
+];
+const TAG_WORD_ADDWORD_TABLE = [
+    ["ソフトウェアトーク", "ボイチェビ", "ボイチェビトーク", "voiceroid", "ボイスロイド", "ボイロ", "cevio", "cevio_ai", "a.i.voice", "voicebox"],
+    ["ソフトウェアシンガー", "vocaloid", "ボカロ", "utau", "cevio", "synthv", "synthesizerv", "neutrino", "歌うボイスロイド"]
+];
 
-//動画の最初に言ってた対応表みたいなやつ
-//自由に列も中の単語も編集しちゃって大丈夫(ニコ動の仕様上OR検索は最大10件なんで行は最大10個かも)
-const TAGNAME_TABLE = [
-    ["ソフトウェアトーク", "VOICEROID", "ボイスロイド", "CeVIO","a.i.voice","VOICEVOX"],
-    ["ソフトウェアトーク実況プレイ", "VOICEROID実況プレイ","CeVIO実況プレイ","a.i.voice実況プレイ"],
-    ["ソフトウェアトーク劇場", "VOICEROID劇場","CeVIO劇場","A.I.VOICE劇場"],
-    ["ソフトウェアトーク解説", "VOICEROID解説","CeVIO解説"],
-    ["ソフトウェアトークキッチン", "VOICEROIDキッチン","CeVIOキッチン"],
-    ["ソフトウェアトーク車載", "VOICEROID車載","CeVIO車載"],
-    ["CeVIO_AI","CeVIO"],
-    [],
-    [],
-    []
-]
 
-//URL取得してタグの部分だけ良い感じに抜き出す
+/* --- カウンターとかの事前定義 --- */
+let is_match = false; //前方一致するかどうか
+let table_col; //前方一致したときのテーブル列
+
+/* --- カURL取得してタグの部分だけ良い感じに抜き出す --- */
 // "/tag/ソフトウェアトーク" みたいな感じに取得されるから、/tag/を空白に置換している
-var url_path = location.pathname
-var tag_name = decodeURI(url_path.replace("/tag/",""))
+var url_path = location.pathname;
+var tag = decodeURI(url_path.replace("/tag/", ""));
 
-//テーブルを上から1行ずつ舐め回す
-for(let n = 0; n < TAGNAME_TABLE.length; n++){
-    //行をいったん変数に格納
-    tagname_array = TAGNAME_TABLE[n]
+/* --- ORの数を数える --- */
+var ORcount = tag.match(/OR/g);
 
-    //比較用に小文字化したものを変数に格納
-    comvarsion_tag = tag_name.toLowerCase()
-    comversion_array = tagname_array.map(v => v.toLowerCase())
+/* --- 前方一致のテーブルを舐め回す --- */
+for (var n = 0; n < TAG_WORD_INDEXOF_TABLE.length; n++) {
+    //とりあえず配列を代入
+    var tagname_arr = TAG_WORD_INDEXOF_TABLE[n];
 
-    //行の中にタグの単語が存在してた場合、{ }で囲まれた部分の処理をする
-    if (comversion_array.includes(comvarsion_tag)) {
-        //["VOICEROID","CeVIO"] → "VOICEROID OR CeVIO" みたいな変換する
-        var converted_tag = tagname_array.join(" OR ")
+    //タグを小文字化
+    tag = tag.toLowerCase();
 
-        //良い感じにURL作って飛ばす、こわい
-        var url = "https://www.nicovideo.jp/tag/" + encodeURI(converted_tag)
-        location.href = url
-        break;
+    //前方一致するものを探す
+    var match_tagname = tagname_arr.find(el => tag.startsWith(el));
+
+    /* --- 前方一致したら --- */
+    if (match_tagname) {
+        is_match = true;
+        /* --- 前方一致箇所を抜いた文字列を取得 ex:ソフトウェアトーク劇場 → 劇場 --- */
+        var genre = tag.replace(match_tagname, "");
+        table_col = n;
     }
+}
+
+//undefinedが文字列として出力されないようにする
+if (genre == undefined) genre = "";
+//ORが無限に出ないようにする
+if (genre.match(/OR/g)) genre = genre.substr(0, genre.indexOf("+OR"));
+
+//ジャンルを追記しながらURLにする
+url_path = TAG_WORD_ADDWORD_TABLE[table_col].join(genre + '+OR+') + genre;
+
+//前方一致し、入力文字列にORが無い時に実行
+if (is_match && (!ORcount)) {
+    var url = "https://www.nicovideo.jp/tag/" + encodeURI(url_path)
+    location.href = url
 }
